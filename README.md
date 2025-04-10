@@ -21,10 +21,10 @@ package controllers
 import (
 	"context"
 
-	"github.com/3scale-ops/basereconciler/config"
-	"github.com/3scale-ops/basereconciler/mutators"
-	"github.com/3scale-ops/basereconciler/reconciler"
-	"github.com/3scale-ops/basereconciler/resource"
+	"github.com/3scale-sre/basereconciler/config"
+	"github.com/3scale-sre/basereconciler/mutators"
+	"github.com/3scale-sre/basereconciler/reconciler"
+	"github.com/3scale-sre/basereconciler/resource"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,7 +36,7 @@ import (
 
 // Use the init function to configure the behavior of the controller. In this case we use
 // "SetDefaultReconcileConfigForGVK" to specify the paths that need to be reconciled/ignored
-// for each resource type. Check the "github.com/3scale-ops/basereconciler/config" for more
+// for each resource type. Check the "github.com/3scale-sre/basereconciler/config" for more
 // configuration options
 func init() {
 	config.SetDefaultReconcileConfigForGVK(
@@ -105,7 +105,7 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	// ReconcileOwnedResources creates/updates/deletes the resoures that our custom resource owns.
 	// It is a list of templates, in this case generated from the base of an object we provide.
 	// Modifiers can be added to the template to get live values from the k8s API, like in this example
-	// with the Service. Check the documentation of the "github.com/3scale-ops/basereconciler/resource"
+	// with the Service. Check the documentation of the "github.com/3scale-sre/basereconciler/resource"
 	// for more information on building templates.
 	result = r.ReconcileOwnedResources(ctx, guestbook, []resource.TemplateInterface{
 
@@ -125,7 +125,7 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			// Retrieve the live values that kube-controller-manager sets
 			// in the Service spec to avoid overwrting them
 			WithMutation(mutators.SetServiceLiveValues()).
-			// There are some useful mutations in the "github.com/3scale-ops/basereconciler/mutators"
+			// There are some useful mutations in the "github.com/3scale-sre/basereconciler/mutators"
 			// package or you can pass your own mutation functions
 			WithMutation(func(ctx context.Context, cl client.Client, desired client.Object) error {
 				// your mutation logic here

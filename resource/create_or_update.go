@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/3scale-ops/basereconciler/config"
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/config"
+	"github.com/3scale-sre/basereconciler/util"
 	"github.com/go-logr/logr"
 	"github.com/nsf/jsondiff"
 	"github.com/ohler55/ojg/jp"

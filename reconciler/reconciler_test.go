@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/3scale-ops/basereconciler/resource"
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/resource"
+	"github.com/3scale-sre/basereconciler/util"
 	"github.com/go-logr/logr"
 	"github.com/google/go-cmp/cmp"
 	corev1 "k8s.io/api/core/v1"

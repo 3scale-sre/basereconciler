@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/3scale-ops/basereconciler/config"
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/config"
+	"github.com/3scale-sre/basereconciler/util"
 	"github.com/go-logr/logr"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"

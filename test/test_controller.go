@@ -19,11 +19,11 @@ package test
 import (
 	"context"
 
-	"github.com/3scale-ops/basereconciler/mutators"
-	"github.com/3scale-ops/basereconciler/reconciler"
-	"github.com/3scale-ops/basereconciler/resource"
-	"github.com/3scale-ops/basereconciler/test/api/v1alpha1"
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/mutators"
+	"github.com/3scale-sre/basereconciler/reconciler"
+	"github.com/3scale-sre/basereconciler/resource"
+	"github.com/3scale-sre/basereconciler/test/api/v1alpha1"
+	"github.com/3scale-sre/basereconciler/util"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
