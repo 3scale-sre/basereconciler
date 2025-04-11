@@ -24,7 +24,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/3scale-ops/basereconciler/reconciler"
+	"github.com/3scale-sre/basereconciler/reconciler"
 	"github.com/goombaio/namegenerator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -39,7 +39,7 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	// +kubebuilder:scaffold:imports
-	"github.com/3scale-ops/basereconciler/test/api/v1alpha1"
+	"github.com/3scale-sre/basereconciler/test/api/v1alpha1"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to

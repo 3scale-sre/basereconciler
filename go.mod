@@ -1,4 +1,4 @@
-module github.com/3scale-ops/basereconciler
+module github.com/3scale-sre/basereconciler
 
 go 1.24
 

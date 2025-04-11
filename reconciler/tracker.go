@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/util"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"

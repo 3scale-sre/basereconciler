@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/3scale-ops/basereconciler/test/api/v1alpha1"
-	"github.com/3scale-ops/basereconciler/util"
+	"github.com/3scale-sre/basereconciler/test/api/v1alpha1"
+	"github.com/3scale-sre/basereconciler/util"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"

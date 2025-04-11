@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/3scale-ops/basereconciler/config"
+	"github.com/3scale-sre/basereconciler/config"
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
