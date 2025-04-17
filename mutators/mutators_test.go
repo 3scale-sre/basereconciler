@@ -5,13 +5,13 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/3scale-sre/basereconciler/util"
 	"github.com/google/go-cmp/cmp"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -37,16 +37,16 @@ func TestSetDeploymentReplicas(t *testing.T) {
 				cl: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
 					&appsv1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-						Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](10)},
+						Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](10)},
 					}).Build(),
 				desired: &appsv1.Deployment{
 					ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-					Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](2)},
+					Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](2)},
 				},
 			},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-				Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](2)},
+				Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](2)},
 			},
 			wantErr: false,
 		},
@@ -58,16 +58,16 @@ func TestSetDeploymentReplicas(t *testing.T) {
 				cl: fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(
 					&appsv1.Deployment{
 						ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-						Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](10)},
+						Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](10)},
 					}).Build(),
 				desired: &appsv1.Deployment{
 					ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-					Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](2)},
+					Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](2)},
 				},
 			},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-				Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](10)},
+				Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](10)},
 			},
 			wantErr: false,
 		},
@@ -79,12 +79,12 @@ func TestSetDeploymentReplicas(t *testing.T) {
 				cl:      fake.NewClientBuilder().WithScheme(scheme.Scheme).Build(),
 				desired: &appsv1.Deployment{
 					ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-					Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](2)},
+					Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](2)},
 				},
 			},
 			want: &appsv1.Deployment{
 				ObjectMeta: metav1.ObjectMeta{Name: "deployment", Namespace: "ns"},
-				Spec:       appsv1.DeploymentSpec{Replicas: util.Pointer[int32](2)},
+				Spec:       appsv1.DeploymentSpec{Replicas: ptr.To[int32](2)},
 			},
 			wantErr: false,
 		},

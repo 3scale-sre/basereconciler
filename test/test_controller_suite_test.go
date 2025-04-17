@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
@@ -59,7 +59,7 @@ var _ = Describe("Test controller", func() {
 		})
 
 		AfterEach(func() {
-			k8sClient.Delete(context.Background(), instance, client.PropagationPolicy(metav1.DeletePropagationForeground))
+			_ = k8sClient.Delete(context.Background(), instance, client.PropagationPolicy(metav1.DeletePropagationForeground))
 		})
 
 		It("initializes the custom resource", func() {
@@ -105,8 +105,8 @@ var _ = Describe("Test controller", func() {
 			instance = &v1alpha1.Test{
 				ObjectMeta: metav1.ObjectMeta{Name: "instance", Namespace: namespace},
 				Spec: v1alpha1.TestSpec{
-					PDB: pointer.Bool(true),
-					HPA: pointer.Bool(true),
+					PDB: ptr.To(true),
+					HPA: ptr.To(true),
 				},
 			}
 			err := k8sClient.Create(context.Background(), instance)
@@ -131,7 +131,7 @@ var _ = Describe("Test controller", func() {
 		})
 
 		AfterEach(func() {
-			k8sClient.Delete(context.Background(), instance, client.PropagationPolicy(metav1.DeletePropagationForeground))
+			_ = k8sClient.Delete(context.Background(), instance, client.PropagationPolicy(metav1.DeletePropagationForeground))
 		})
 
 		It("watches for changes in the owned resources and avoids drifts", func() {
@@ -238,8 +238,8 @@ var _ = Describe("Test controller", func() {
 
 			// disable pdb and hpa
 			patch := client.MergeFrom(instance.DeepCopy())
-			instance.Spec.PDB = util.Pointer(false)
-			instance.Spec.HPA = util.Pointer(false)
+			instance.Spec.PDB = ptr.To(false)
+			instance.Spec.HPA = ptr.To(false)
 			err := k8sClient.Patch(context.Background(), instance, patch)
 			Expect(err).ToNot(HaveOccurred())
 
@@ -272,7 +272,7 @@ var _ = Describe("Test controller", func() {
 		It("prunes the service", func() {
 
 			patch := client.MergeFrom(instance.DeepCopy())
-			instance.Spec.PruneService = util.Pointer(true)
+			instance.Spec.PruneService = ptr.To(true)
 			err := k8sClient.Patch(context.Background(), instance, patch)
 			Expect(err).ToNot(HaveOccurred())
 

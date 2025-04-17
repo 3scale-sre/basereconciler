@@ -21,11 +21,11 @@ package v1alpha1
 
 import (
 	"github.com/3scale-sre/basereconciler/reconciler"
-	"github.com/3scale-sre/basereconciler/util"
 	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
@@ -82,13 +82,13 @@ type Test struct {
 
 func (test *Test) Default() {
 	if test.Spec.HPA == nil {
-		test.Spec.HPA = util.Pointer(false)
+		test.Spec.HPA = ptr.To(false)
 	}
 	if test.Spec.PDB == nil {
-		test.Spec.PDB = util.Pointer(false)
+		test.Spec.PDB = ptr.To(false)
 	}
 	if test.Spec.PruneService == nil {
-		test.Spec.PruneService = util.Pointer(false)
+		test.Spec.PruneService = ptr.To(false)
 	}
 }
 

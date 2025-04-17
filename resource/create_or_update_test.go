@@ -16,6 +16,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -69,7 +70,7 @@ func TestCreateOrUpdate(t *testing.T) {
 							},
 							Spec: corev1.ServiceSpec{
 								Type:                  corev1.ServiceTypeLoadBalancer,
-								InternalTrafficPolicy: util.Pointer(corev1.ServiceInternalTrafficPolicyLocal),
+								InternalTrafficPolicy: ptr.To(corev1.ServiceInternalTrafficPolicyLocal),
 								Ports: []corev1.ServicePort{{
 									Name: "port1", Port: 90, TargetPort: intstr.FromInt(90), Protocol: corev1.ProtocolTCP}},
 							},
@@ -103,7 +104,7 @@ func TestCreateOrUpdate(t *testing.T) {
 				Spec: corev1.ServiceSpec{
 					Type:                  corev1.ServiceTypeLoadBalancer,
 					ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeCluster,
-					InternalTrafficPolicy: util.Pointer(corev1.ServiceInternalTrafficPolicyLocal),
+					InternalTrafficPolicy: ptr.To(corev1.ServiceInternalTrafficPolicyLocal),
 					SessionAffinity:       corev1.ServiceAffinityNone,
 					Ports: []corev1.ServicePort{{
 						Name: "port1", Port: 90, TargetPort: intstr.FromInt(90), Protocol: corev1.ProtocolTCP, NodePort: 33333}},
@@ -123,7 +124,7 @@ func TestCreateOrUpdate(t *testing.T) {
 						Spec: corev1.ServiceSpec{
 							Type:                  corev1.ServiceTypeLoadBalancer,
 							ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeCluster,
-							InternalTrafficPolicy: util.Pointer(corev1.ServiceInternalTrafficPolicyCluster),
+							InternalTrafficPolicy: ptr.To(corev1.ServiceInternalTrafficPolicyCluster),
 							SessionAffinity:       corev1.ServiceAffinityNone,
 							Ports: []corev1.ServicePort{
 								{Name: "port1", Port: 80, TargetPort: intstr.FromInt(80), Protocol: corev1.ProtocolTCP, NodePort: 33333},
@@ -173,7 +174,7 @@ func TestCreateOrUpdate(t *testing.T) {
 				Spec: corev1.ServiceSpec{
 					Type:                  corev1.ServiceTypeLoadBalancer,
 					ExternalTrafficPolicy: corev1.ServiceExternalTrafficPolicyTypeCluster,
-					InternalTrafficPolicy: util.Pointer(corev1.ServiceInternalTrafficPolicyCluster),
+					InternalTrafficPolicy: ptr.To(corev1.ServiceInternalTrafficPolicyCluster),
 					SessionAffinity:       corev1.ServiceAffinityNone,
 					Ports: []corev1.ServicePort{
 						{Name: "port1", Port: 80, TargetPort: intstr.FromInt(80), Protocol: corev1.ProtocolTCP, NodePort: 33333},
@@ -228,8 +229,8 @@ func TestCreateOrUpdate(t *testing.T) {
 						APIVersion:         "v1",
 						Kind:               "ServiceAccount",
 						Name:               "owner",
-						Controller:         util.Pointer(true),
-						BlockOwnerDeletion: util.Pointer(true),
+						Controller:         ptr.To(true),
+						BlockOwnerDeletion: ptr.To(true),
 					}},
 				},
 				Spec: corev1.ServiceSpec{
@@ -312,8 +313,8 @@ func TestCreateOrUpdate(t *testing.T) {
 						APIVersion:         "v1",
 						Kind:               "ServiceAccount",
 						Name:               "owner",
-						Controller:         util.Pointer(true),
-						BlockOwnerDeletion: util.Pointer(true),
+						Controller:         ptr.To(true),
+						BlockOwnerDeletion: ptr.To(true),
 					}},
 				},
 			},
@@ -333,7 +334,7 @@ func TestCreateOrUpdate(t *testing.T) {
 			}
 			if tt.wantObjectErr == nil {
 				o, _ := util.NewObjectFromGVK(schema.FromAPIVersionAndKind(ref.APIVersion, ref.Kind), tt.args.scheme)
-				tt.args.cl.Get(context.TODO(), types.NamespacedName{Name: tt.wantObject.GetName(), Namespace: tt.wantObject.GetNamespace()}, o)
+				_ = tt.args.cl.Get(context.TODO(), types.NamespacedName{Name: tt.wantObject.GetName(), Namespace: tt.wantObject.GetNamespace()}, o)
 				if diff := cmp.Diff(o, tt.wantObject, util.IgnoreProperty("ResourceVersion")); len(diff) > 0 {
 					t.Errorf("CreateOrUpdate() object diff = %v", diff)
 				}
