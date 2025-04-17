@@ -69,7 +69,7 @@ var _ = BeforeSuite(func() {
 		CRDDirectoryPaths: []string{
 			filepath.Join("api", "v1alpha1"),
 		},
-		// UseExistingCluster: util.Pointer(true),
+		// UseExistingCluster: ptr.To(true),
 	}
 
 	nBig, err := rand.Int(rand.Reader, big.NewInt(1000000))

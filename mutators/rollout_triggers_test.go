@@ -9,6 +9,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
@@ -35,7 +36,7 @@ func TestRolloutTrigger_GetHash(t *testing.T) {
 			name: "Secret hash",
 			fields: fields{
 				Name:       "secret",
-				SecretName: util.Pointer("secret"),
+				SecretName: ptr.To("secret"),
 			},
 			args: args{
 				ctx: context.TODO(),
@@ -53,7 +54,7 @@ func TestRolloutTrigger_GetHash(t *testing.T) {
 			name: "ConfigMap hash",
 			fields: fields{
 				Name:          "cm",
-				ConfigMapName: util.Pointer("cm"),
+				ConfigMapName: ptr.To("cm"),
 			},
 			args: args{
 				ctx: context.TODO(),
@@ -71,7 +72,7 @@ func TestRolloutTrigger_GetHash(t *testing.T) {
 			name: "Returns '' if secret does not exist",
 			fields: fields{
 				Name:       "secret",
-				SecretName: util.Pointer("secret"),
+				SecretName: ptr.To("secret"),
 			},
 			args: args{
 				ctx:       context.TODO(),
@@ -85,7 +86,7 @@ func TestRolloutTrigger_GetHash(t *testing.T) {
 			name: "Returns '' if cm does not exist",
 			fields: fields{
 				Name:          "secret",
-				ConfigMapName: util.Pointer("secret"),
+				ConfigMapName: ptr.To("secret"),
 			},
 			args: args{
 				ctx:       context.TODO(),
@@ -134,7 +135,7 @@ func TestRolloutTrigger_GetAnnotationKey(t *testing.T) {
 			name: "",
 			fields: fields{
 				Name:       "secret",
-				SecretName: util.Pointer("secret"),
+				SecretName: ptr.To("secret"),
 			},
 			args: args{
 				annotationsDomain: "example.com",
@@ -179,7 +180,7 @@ func TestRolloutTrigger_Add(t *testing.T) {
 			name: "Adds rollout annotation to Deployment's pods",
 			fields: fields{
 				Name:          "cm",
-				ConfigMapName: util.Pointer("cm"),
+				ConfigMapName: ptr.To("cm"),
 			},
 			args: args{
 				domain: "example.com",
@@ -202,7 +203,7 @@ func TestRolloutTrigger_Add(t *testing.T) {
 			name: "Adds rollout annotation to Deployment's pods (II)",
 			fields: fields{
 				Name:          "cm",
-				ConfigMapName: util.Pointer("cm"),
+				ConfigMapName: ptr.To("cm"),
 			},
 			args: args{
 				domain: "example.com",
@@ -231,7 +232,7 @@ func TestRolloutTrigger_Add(t *testing.T) {
 			name: "Adds rollout annotation to StatefulSet's pods",
 			fields: fields{
 				Name:          "cm",
-				ConfigMapName: util.Pointer("cm"),
+				ConfigMapName: ptr.To("cm"),
 			},
 			args: args{
 				domain: "example.com",

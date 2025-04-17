@@ -271,7 +271,7 @@ func TestReconciler_ManageResourceLifecycle(t *testing.T) {
 						o := &corev1.ServiceAccount{}
 						o.SetName("test-finalization-logic")
 						o.SetNamespace("ns")
-						c.Create(ctx, o)
+						_ = c.Create(ctx, o)
 						return nil
 					}),
 				},
@@ -388,7 +388,7 @@ func TestReconciler_ManageResourceLifecycle(t *testing.T) {
 			}
 			if tt.wantObject != nil {
 				o := tt.wantObject.DeepCopyObject().(client.Object)
-				tt.fields.Client.Get(context.TODO(), types.NamespacedName{Name: tt.wantObject.GetName(), Namespace: tt.wantObject.GetNamespace()}, o)
+				_ = tt.fields.Client.Get(context.TODO(), types.NamespacedName{Name: tt.wantObject.GetName(), Namespace: tt.wantObject.GetNamespace()}, o)
 				if diff := cmp.Diff(o, tt.wantObject,
 					util.IgnoreProperty("ResourceVersion"),
 					util.IgnoreProperty("DeletionTimestamp"),

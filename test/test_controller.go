@@ -31,7 +31,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -96,7 +96,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 				mutators.SetDeploymentReplicas(true),
 				mutators.RolloutTrigger{
 					Name:       "secret",
-					SecretName: pointer.String("secret"),
+					SecretName: ptr.To("secret"),
 				}.Add("example.com"),
 			},
 		},
@@ -182,12 +182,12 @@ func deployment(namespace string) resource.TemplateBuilderFunction[*appsv1.Deplo
 				Namespace: namespace,
 			},
 			Spec: appsv1.DeploymentSpec{
-				Replicas: pointer.Int32(1),
+				Replicas: ptr.To(int32(1)),
 				Strategy: appsv1.DeploymentStrategy{
 					Type: appsv1.RollingUpdateDeploymentStrategyType,
 					RollingUpdate: &appsv1.RollingUpdateDeployment{
-						MaxSurge:       util.Pointer(intstr.FromString("25%")),
-						MaxUnavailable: util.Pointer(intstr.FromString("25%"))},
+						MaxSurge:       ptr.To(intstr.FromString("25%")),
+						MaxUnavailable: ptr.To(intstr.FromString("25%"))},
 				},
 				Selector: &metav1.LabelSelector{
 					MatchLabels: map[string]string{"selector": "deployment"},
@@ -245,7 +245,7 @@ func hpa(namespace string) resource.TemplateBuilderFunction[*autoscalingv2.Horiz
 					Kind:       "Deployment",
 					Name:       "deployment",
 				},
-				MinReplicas: pointer.Int32(1),
+				MinReplicas: ptr.To(int32(1)),
 				MaxReplicas: 1,
 				Metrics: []autoscalingv2.MetricSpec{{
 					Type: autoscalingv2.ResourceMetricSourceType,
@@ -253,7 +253,7 @@ func hpa(namespace string) resource.TemplateBuilderFunction[*autoscalingv2.Horiz
 						Name: "cpu",
 						Target: autoscalingv2.MetricTarget{
 							Type:               autoscalingv2.UtilizationMetricType,
-							AverageUtilization: util.Pointer(int32(90)),
+							AverageUtilization: ptr.To(int32(90)),
 						},
 					},
 				}},
