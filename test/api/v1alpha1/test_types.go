@@ -94,7 +94,7 @@ func (test *Test) Default() {
 
 var _ reconciler.ObjectWithAppStatus = &Test{}
 
-func (t *Test) GetStatus() reconciler.AppStatus {
+func (t *Test) GetStatus() any {
 	return &t.Status
 }
 
