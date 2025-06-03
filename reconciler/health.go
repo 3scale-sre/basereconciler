@@ -39,6 +39,7 @@ func GetDeploymentHealth(deployment *appsv1.Deployment) (*HealthStatus, error) {
 			Message: "Deployment is paused",
 		}, nil
 	}
+	//nolint:lll
 	// Borrowed at kubernetes/kubectl/rollout_status.go https://github.com/kubernetes/kubernetes/blob/5232ad4a00ec93942d0b2c6359ee6cd1201b46bc/pkg/kubectl/rollout_status.go#L80
 	if deployment.Generation <= deployment.Status.ObservedGeneration {
 		cond := getAppsv1DeploymentCondition(deployment.Status, appsv1.DeploymentProgressing)
@@ -50,18 +51,21 @@ func GetDeploymentHealth(deployment *appsv1.Deployment) (*HealthStatus, error) {
 			}, nil
 		case deployment.Spec.Replicas != nil && deployment.Status.UpdatedReplicas < *deployment.Spec.Replicas:
 			return &HealthStatus{
-				Status:  HealthStatusProgressing,
-				Message: fmt.Sprintf("Waiting for rollout to finish: %d out of %d new replicas have been updated...", deployment.Status.UpdatedReplicas, *deployment.Spec.Replicas),
+				Status: HealthStatusProgressing,
+				Message: fmt.Sprintf("Waiting for rollout to finish: %d out of %d new replicas have been updated...",
+					deployment.Status.UpdatedReplicas, *deployment.Spec.Replicas),
 			}, nil
 		case deployment.Status.Replicas > deployment.Status.UpdatedReplicas:
 			return &HealthStatus{
-				Status:  HealthStatusProgressing,
-				Message: fmt.Sprintf("Waiting for rollout to finish: %d old replicas are pending termination...", deployment.Status.Replicas-deployment.Status.UpdatedReplicas),
+				Status: HealthStatusProgressing,
+				Message: fmt.Sprintf("Waiting for rollout to finish: %d old replicas are pending termination...",
+					deployment.Status.Replicas-deployment.Status.UpdatedReplicas),
 			}, nil
 		case deployment.Status.AvailableReplicas < deployment.Status.UpdatedReplicas:
 			return &HealthStatus{
-				Status:  HealthStatusProgressing,
-				Message: fmt.Sprintf("Waiting for rollout to finish: %d of %d updated replicas are available...", deployment.Status.AvailableReplicas, deployment.Status.UpdatedReplicas),
+				Status: HealthStatusProgressing,
+				Message: fmt.Sprintf("Waiting for rollout to finish: %d of %d updated replicas are available...",
+					deployment.Status.AvailableReplicas, deployment.Status.UpdatedReplicas),
 			}, nil
 		}
 	} else {
@@ -76,7 +80,8 @@ func GetDeploymentHealth(deployment *appsv1.Deployment) (*HealthStatus, error) {
 	}, nil
 }
 
-func getAppsv1DeploymentCondition(status appsv1.DeploymentStatus, condType appsv1.DeploymentConditionType) *appsv1.DeploymentCondition {
+func getAppsv1DeploymentCondition(status appsv1.DeploymentStatus,
+	condType appsv1.DeploymentConditionType) *appsv1.DeploymentCondition {
 	for i := range status.Conditions {
 		c := status.Conditions[i]
 		if c.Type == condType {
@@ -87,6 +92,7 @@ func getAppsv1DeploymentCondition(status appsv1.DeploymentStatus, condType appsv
 }
 
 func GetStatefulSetHealth(sts *appsv1.StatefulSet) (*HealthStatus, error) {
+	//nolint:lll
 	// Borrowed at kubernetes/kubectl/rollout_status.go https://github.com/kubernetes/kubernetes/blob/5232ad4a00ec93942d0b2c6359ee6cd1201b46bc/pkg/kubectl/rollout_status.go#L131
 	if sts.Status.ObservedGeneration == 0 || sts.Generation > sts.Status.ObservedGeneration {
 		return &HealthStatus{
@@ -100,19 +106,22 @@ func GetStatefulSetHealth(sts *appsv1.StatefulSet) (*HealthStatus, error) {
 			Message: fmt.Sprintf("Waiting for %d pods to be ready...", *sts.Spec.Replicas-sts.Status.ReadyReplicas),
 		}, nil
 	}
-	if sts.Spec.UpdateStrategy.Type == appsv1.RollingUpdateStatefulSetStrategyType && sts.Spec.UpdateStrategy.RollingUpdate != nil {
+	if sts.Spec.UpdateStrategy.Type == appsv1.RollingUpdateStatefulSetStrategyType &&
+		sts.Spec.UpdateStrategy.RollingUpdate != nil {
 		if sts.Spec.Replicas != nil && sts.Spec.UpdateStrategy.RollingUpdate.Partition != nil {
 			if sts.Status.UpdatedReplicas < (*sts.Spec.Replicas - *sts.Spec.UpdateStrategy.RollingUpdate.Partition) {
 				return &HealthStatus{
 					Status: HealthStatusProgressing,
+					//nolint:lll
 					Message: fmt.Sprintf("Waiting for partitioned roll out to finish: %d out of %d new pods have been updated...",
 						sts.Status.UpdatedReplicas, (*sts.Spec.Replicas - *sts.Spec.UpdateStrategy.RollingUpdate.Partition)),
 				}, nil
 			}
 		}
 		return &HealthStatus{
-			Status:  HealthStatusHealthy,
-			Message: fmt.Sprintf("partitioned roll out complete: %d new pods have been updated...", sts.Status.UpdatedReplicas),
+			Status: HealthStatusHealthy,
+			Message: fmt.Sprintf("partitioned roll out complete: %d new pods have been updated...",
+				sts.Status.UpdatedReplicas),
 		}, nil
 	}
 	if sts.Spec.UpdateStrategy.Type == appsv1.OnDeleteStatefulSetStrategyType {
@@ -123,13 +132,15 @@ func GetStatefulSetHealth(sts *appsv1.StatefulSet) (*HealthStatus, error) {
 	}
 	if sts.Status.UpdateRevision != sts.Status.CurrentRevision {
 		return &HealthStatus{
-			Status:  HealthStatusProgressing,
-			Message: fmt.Sprintf("waiting for statefulset rolling update to complete %d pods at revision %s...", sts.Status.UpdatedReplicas, sts.Status.UpdateRevision),
+			Status: HealthStatusProgressing,
+			Message: fmt.Sprintf("waiting for statefulset rolling update to complete %d pods at revision %s...",
+				sts.Status.UpdatedReplicas, sts.Status.UpdateRevision),
 		}, nil
 	}
 	return &HealthStatus{
-		Status:  HealthStatusHealthy,
-		Message: fmt.Sprintf("statefulset rolling update complete %d pods at revision %s...", sts.Status.CurrentReplicas, sts.Status.CurrentRevision),
+		Status: HealthStatusHealthy,
+		Message: fmt.Sprintf("statefulset rolling update complete %d pods at revision %s...",
+			sts.Status.CurrentReplicas, sts.Status.CurrentRevision),
 	}, nil
 }
 

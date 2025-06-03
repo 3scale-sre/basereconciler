@@ -212,13 +212,14 @@ func setWorkloadHealth(status AppStatusWithHealth, obj client.Object) (bool, err
 
 	if !equality.Semantic.DeepEqual(observedHealth, storedHealth) {
 		status.SetHealthStatus(key, string(observedHealth.Status))
-		status.SetHealthMessage(key, string(observedHealth.Message))
+		status.SetHealthMessage(key, observedHealth.Message)
 		update = true
 	}
 
 	// aggregate health if status implements AppStatusWithAggregatedHealth
 	o, ok := status.(AppStatusWithAggregatedHealth)
-	if ok && healthIsWorse(HealthStatusCode(o.GetAggregatedHealthStatus()), HealthStatusCode(status.GetHealthStatus(key))) {
+	if ok && healthIsWorse(HealthStatusCode(o.GetAggregatedHealthStatus()),
+		HealthStatusCode(status.GetHealthStatus(key))) {
 		o.SetAggregatedHealthStatus(status.GetHealthStatus(key))
 		update = true
 	}
