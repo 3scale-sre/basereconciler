@@ -167,3 +167,54 @@ Then you just need to register the controller with the controller-runtime manage
 	}
 [...]
 ```
+
+## Status reconciliation
+
+The status reconciliation feature works for custom resources that deploy workloads. Right now only owned Deployments and StatefulSets are supported.
+
+To use the status reconciliation feature add this to your controller, indicating the Deployments and StatefulSets that are owned by the custom resource:
+
+```go
+[...]
+	result = r.ReconcileStatus(ctx, instance,
+		[]types.NamespacedName{{Name: "my-deployment", Namespace: "ns"}},
+		[]types.NamespacedName{{Name: "my-statefulset", Namespace: "ns"}},
+	)
+	if result.ShouldReturn() {
+		return result.Values()
+	}
+[...]
+```
+
+The status reconciliation is modular, with 3 tiers of functionality depending on the interfaces that the custom resource implements:
+
+* **Tier 1**. The custom resource has to implement the [ObjectWithAppStatus interface](reconciler/status.go#L16) and the status object has to implement the [AppStatus interface](reconciler/status.go#L26). Implementing these interfaces will make the controller  lookup the current status of the Deployment/s and/or StatefulSet/s and copy over their status/es to the custom resource's status.
+
+* **Tier 2**. Additionally to the interfaces described in **Tier 1**, also the [AppStatusWithHealth interface](reconciler/status.go#L35) is implemented. This will make the controller calculate the health of each Deployment/StatefulSet and write it down to the custom resource status.
+
+* **Tier 3**. For workloads composed by more that 1 Deployment/StatefulSet, if the [AppStatusWithAggregatedHealth interface](reconciler/status.go#L46) is also implemented, the controller will calculate the overall health of the custom resources based on each individual Deployment/StatefulSet health status and then written to the status of the custom resource. The overall health is always the worse health status found across all owned Deployments/StatefulSets.
+
+An example of a custom resource that implements **Tier 1** status reconciliation can be found in [this test](test/api/v1alpha1/test_types.go). To implement the other 2 tiers just add the required methods to the status object.
+
+There is also the option to pass custom status reconciliation code in case the custom resource has status fields that require specific logic. An example of this could be:
+
+```go
+[...]
+	result = r.ReconcileStatus(ctx, instance,
+		[]types.NamespacedName{{Name: "my-deployment", Namespace: "ns"}},
+		[]types.NamespacedName{{Name: "my-statefulset", Namespace: "ns"}},
+		func() (bool, error) {
+			if condition {
+				instance.Status.MyCustomField = value
+				// return true when the field/s requires update
+				return true, nil
+			}
+			// return false when the field/s doesn't/don't require update
+			return false, nil
+		})
+	)
+	if result.ShouldReturn() {
+		return result.Values()
+	}
+[...]
+```
