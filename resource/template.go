@@ -208,9 +208,12 @@ func (t *Template[T]) Build(ctx context.Context, cl client.Client, o client.Obje
 
 	// Phase 2: Apply all mutations in order
 	// Each mutation can access the Kubernetes API to retrieve live cluster information
-	for _, fn := range t.TemplateMutations {
-		if err := fn(ctx, cl, o); err != nil {
-			return nil, err
+	// This code isn't safe to run if the client is nil
+	if cl != nil {
+		for _, fn := range t.TemplateMutations {
+			if err := fn(ctx, cl, o); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -365,7 +368,7 @@ func inferGVKFromType[T client.Object](scheme *runtime.Scheme) schema.GroupVersi
 
 // ExtractGVK is a convenience function that filters and extracts Template[T] instances
 // from a slice of TemplateInterface objects. It performs type assertion to identify
-// templates that match the specified generic type T and returns copies of those templates.
+// templates that match the specified generic type T and returns pointers to those templates.
 //
 // This function is useful when working with heterogeneous collections of templates
 // and you need to operate on only those templates that manage a specific resource type.
@@ -373,13 +376,13 @@ func inferGVKFromType[T client.Object](scheme *runtime.Scheme) schema.GroupVersi
 // Type Safety:
 //   - Only templates that are actually *Template[T] instances are included
 //   - Invalid type assertions are silently skipped (no panics)
-//   - Returns value copies, not pointers, to prevent accidental mutations
+//   - Returns pointers to the original templates, allowing mutations
 //
 // Parameters:
 //   - templates: A slice of TemplateInterface objects to filter
 //
 // Returns:
-//   - A slice of Template[T] values containing only the templates that match type T
+//   - A slice of *Template[T] pointers containing only the templates that match type T
 //   - Empty slice if no templates match the specified type
 //
 // Example:
@@ -392,16 +395,21 @@ func inferGVKFromType[T client.Object](scheme *runtime.Scheme) schema.GroupVersi
 //
 //	// Extract only Service templates
 //	serviceTemplates := ExtractGVK[*corev1.Service](allTemplates)
-//	// Returns: []Template[*corev1.Service] with only serviceTemplate
+//	// Returns: []*Template[*corev1.Service] with only serviceTemplate
 //
 //	// Extract only Pod templates
 //	podTemplates := ExtractGVK[*corev1.Pod](allTemplates)
-//	// Returns: []Template[*corev1.Pod] with only podTemplate
-func ExtractGVK[T client.Object](templates []TemplateInterface) []Template[T] {
-	out := make([]Template[T], 0, len(templates))
+//	// Returns: []*Template[*corev1.Pod] with only podTemplate
+//
+//	// Now you can mutate the extracted templates
+//	for _, template := range serviceTemplates {
+//	    template.WithEnsureProperties([]Property{"spec.ports"})
+//	}
+func ExtractGVK[T client.Object](templates []TemplateInterface) []*Template[T] {
+	out := make([]*Template[T], 0, len(templates))
 	for _, template := range templates {
 		if realizedTemplate, ok := template.(*Template[T]); ok {
-			out = append(out, *realizedTemplate)
+			out = append(out, realizedTemplate)
 		}
 	}
 	return out
