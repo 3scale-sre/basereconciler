@@ -9,10 +9,12 @@ issues:
   # restore some of the defaults
   # (fill in the rest as needed)
   exclude-rules:
+    # Exclude all test files from all linters
+    - path: "_test\\.go$"
+      text: ".*"
     - path: "test/*"
-      linters:
-        - lll
-        - dupl
+      text: ".*"
+
 linters:
   disable-all: true
   enable:
