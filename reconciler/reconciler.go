@@ -299,9 +299,9 @@ func (r *Reconciler) ReconcileOwnedResources(
 	requeue := false
 
 	for _, template := range list {
-		ref, err := resource.CreateOrUpdate(ctx, r.Client, r.Scheme, owner, template)
+		ref, err := resource.CreateOrModify(ctx, r.Client, r.Scheme, owner, template)
 		if err != nil {
-			return Result{Error: fmt.Errorf("unable to CreateOrUpdate resource: %w", err)}
+			return Result{Error: fmt.Errorf("unable to CreateOrModify resource: %w", err)}
 		}
 		if ref != nil {
 			managedResources = append(managedResources, *ref)

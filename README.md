@@ -1,19 +1,28 @@
 # basereconciler
 
-Basereconciler is an attempt to create a reconciler that can be imported and used in any controller-runtime based controller to perform the most common tasks a controller usually performs. It's a bunch of code that it's typically written again and again for every and each controller and that can be abstracted to work in a more generic way to avoid the repetition and improve code mantainability.
-At the moment basereconciler can perform the following tasks:
+**basereconciler** is a comprehensive reconciliation library designed to be imported and used in any controller-runtime based controller to perform the most common tasks a controller typically performs. It abstracts repetitive reconciliation code into a reusable, generic framework that improves code maintainability and reduces boilerplate.
 
-* **Get the custom resource and perform some common tasks on it**:
-  * Management of initialization logic: custom initialization functions can be passed to perform initialization tasks on the custom resource. Initialization can be done persisting changes in the API server (use reconciler.WithInitializationFunc) or without persisting them (reconciler.WithInMemoryInitializationFunc).
-  * Management of resource finalizer: some custom resources required more complex finalization logic. For this to happen a finalizer must be in place. Basereconciler can keep this finalizer in place and remove it when necessary during resource finalization.
-  * Management of finalization logic: it checks if the resource is being finalized and executed the finalization logic passed to it if that is the case. When all finalization logic is completed it removes the finalizer on the custom resource.
-* **Reconcile resources owned by the custom resource**: basereconciler can keep the owned resources of a custom resource in it's desired state. It works for any resource type, and only requires that the user configures how each specific resource type has to be configured. The resource reconciler only works in "update mode" right now, so any operation to transition a given resource from its live state to its desired state will be an Update. We might add a "patch mode" in the future.
-* **Reconcile custom resource status**: if the custom resource implements a certain interface, basereconciler can also be in charge of reconciling the status.
-* **Resource pruner**: when the reconciler stops seeing a certain resource, owned by the custom resource, it will prune them as it understands that the resource is no longer required. The resource pruner can be disabled globally or enabled/disabled on a per resource basis based on an annotation.
+## Core Features
+
+* **Resource Lifecycle Management**:
+  * **Initialization Logic**: Custom initialization functions can be passed to perform initialization tasks on the custom resource. Initialization can be done persisting changes in the API server (use `reconciler.WithInitializationFunc`) or without persisting them (use `reconciler.WithInMemoryInitializationFunc`).
+  * **Finalizer Management**: Some custom resources require more complex finalization logic. For this to happen, a finalizer must be in place. basereconciler can keep this finalizer in place and remove it when necessary during resource finalization.
+  * **Finalization Logic**: It checks if the resource is being finalized and executes the finalization logic passed to it. When all finalization logic is completed, it removes the finalizer from the custom resource.
+
+* **Intelligent Resource Reconciliation**: basereconciler can keep the owned resources of a custom resource in their desired state. It works for any resource type with configurable reconciliation behavior:
+  * **Dual Operation Modes**: Supports both Update operations (full object replacement) and Patch operations (strategic merge patches for efficiency).
+  * **Property-based Control**: Fine-grained control over which fields are reconciled via JSONPath expressions.
+  * **Automatic GVK Inference**: Templates automatically determine their resource type from generic type parameters.
+  * **Template-driven Configuration**: Operation type (Update/Patch) and reconciliation properties configured per template.
+  * **Global Configuration Support**: Default configurations can be set globally with per-template overrides.
+
+* **Status Reconciliation**: If the custom resource implements a certain interface, basereconciler can also be in charge of reconciling the status.
+
+* **Resource Pruner**: When the reconciler stops seeing a certain resource owned by the custom resource, it will prune them as it understands that the resource is no longer required. The resource pruner can be disabled globally or enabled/disabled on a per-resource basis based on an annotation.
 
 ## Basic Usage
 
-The following example is a kubebuilder bootstrapped controller that uses basereconciler to reconcile several resources owned by a custom resource. Explanations inline in the code.
+The following example shows a kubebuilder-bootstrapped controller that uses basereconciler to reconcile several resources owned by a custom resource. Explanations are inline in the code.
 
 ```go
 package controllers
@@ -34,17 +43,16 @@ import (
 	webappv1 "my.domain/guestbook/api/v1"
 )
 
-// Use the init function to configure the behavior of the controller. In this case we use
-// "SetDefaultReconcileConfigForGVK" to specify the paths that need to be reconciled/ignored
-// for each resource type. Check the "github.com/3scale-sre/basereconciler/config" for more
-// configuration options
+// Use the init function to configure the global behavior of the controller. This is optional -
+// templates can also specify their own reconciliation configuration via WithEnsureProperties/WithIgnoreProperties.
+// Check the "github.com/3scale-sre/basereconciler/config" package for more configuration options.
 func init() {
 	config.SetDefaultReconcileConfigForGVK(
 		schema.FromAPIVersionAndKind("apps/v1", "Deployment"),
 		config.ReconcileConfigForGVK{
 			EnsureProperties: []string{
 				"metadata.annotations",
-				"metadata.labels",
+				"metadata.labels", 
 				"spec",
 			},
 			IgnoreProperties: []string{
@@ -52,9 +60,9 @@ func init() {
 			},
 		})
 	config.SetDefaultReconcileConfigForGVK(
-		// specifying a config for an empty GVK will
-		// set a default fallback config for any gvk that is not
-		// explicitely declared in the configuration. Think of it
+		// Specifying a config for an empty GVK will
+		// set a default fallback config for any GVK that is not
+		// explicitly declared in the configuration. Think of it
 		// as a wildcard.
 		schema.GroupVersionKind{},
 		config.ReconcileConfigForGVK{
@@ -77,13 +85,13 @@ type GuestbookReconciler struct {
 // +kubebuilder:rbac:groups="apps",namespace=placeholder,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	// configure the logger for the controller. The function also returns a modified
+	// Configure the logger for the controller. The function also returns a modified
 	// copy of the context that includes the logger so it's easily passed around to other functions.
 	ctx, logger := r.Logger(ctx, "guestbook", req.NamespacedName)
 
-	// ManageResourceLifecycle will take care of retrieving the custom resoure from the API. It is also in charge of the resource
+	// ManageResourceLifecycle will take care of retrieving the custom resource from the API. It is also in charge of the resource
 	// lifecycle: initialization and finalization logic. In this example, we are configuring a finalizer in our custom resource and passing
-	// a finalization function that will casuse a log line to show when the resource is being deleted.
+	// a finalization function that will cause a log line to show when the resource is being deleted.
 	guestbook := &webappv1.Guestbook{}
 	result := r.ManageResourceLifecycle(ctx, req, guestbook,
 		reconciler.WithInitializationFunc(
@@ -102,40 +110,39 @@ func (r *GuestbookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 		return result.Values()
 	}
 
-	// ReconcileOwnedResources creates/updates/deletes the resoures that our custom resource owns.
-	// It is a list of templates, in this case generated from the base of an object we provide.
-	// Modifiers can be added to the template to get live values from the k8s API, like in this example
-	// with the Service. Check the documentation of the "github.com/3scale-sre/basereconciler/resource"
-	// for more information on building templates.
+	// ReconcileOwnedResources creates/updates/deletes the resources that our custom resource owns.
+	// It takes a list of templates that automatically infer their GVK from the generic type parameter.
+	// Templates can be configured with different operation modes (Update/Patch) and property configurations.
+	// Check the documentation of the "github.com/3scale-sre/basereconciler/resource" package for more information.
 	result = r.ReconcileOwnedResources(ctx, guestbook, []resource.TemplateInterface{
 
-		resource.NewTemplateFromObjectFunction[*appsv1.Deployment](
-			func() *appsv1.Deployment {
-				return &appsv1.Deployment{
-					// define your object here
-				}
-			}),
+		// Basic template using automatic GVK inference and default global configuration
+		resource.NewTemplateFromObjectFunction(func() *appsv1.Deployment {
+			return &appsv1.Deployment{
+				// define your deployment here
+			}
+		}),
 
-		resource.NewTemplateFromObjectFunction[*corev1.Service](
-			func() *corev1.Service {
-				return &corev1.Service{
-					// define your object here
-				}
-			}).
+		// Advanced template with mutations, custom reconciliation configuration, and patch operation
+		resource.NewTemplateFromObjectFunction(func() *corev1.Service {
+			return &corev1.Service{
+				// define your service here  
+			}
+		}).
 			// Retrieve the live values that kube-controller-manager sets
-			// in the Service spec to avoid overwrting them
+			// in the Service spec to avoid overwriting them
 			WithMutation(mutators.SetServiceLiveValues()).
-			// There are some useful mutations in the "github.com/3scale-sre/basereconciler/mutators"
-			// package or you can pass your own mutation functions
+			// There are useful mutations in the "github.com/3scale-sre/basereconciler/mutators"
+			// package, or you can pass your own mutation functions
 			WithMutation(func(ctx context.Context, cl client.Client, desired client.Object) error {
-				// your mutation logic here
+				// your custom mutation logic here
 				return nil
 			}).
-			// The templates are reconciled using the global config defined in the init() function
-			// but in this case we are passing a custom config that will apply
-			// only to the reconciliation of this template
+			// Configure which properties to reconcile (overrides global configuration for this template)
 			WithEnsureProperties([]resource.Property{"spec"}).
-			WithIgnoreProperties([]resource.Property{"spec.clusterIP", "spec.clusterIPs"}),
+			WithIgnoreProperties([]resource.Property{"spec.clusterIP", "spec.clusterIPs"}).
+			// Use patch operation for better performance and reduced conflicts
+			WithModifyOp(resource.ModifyOpPatch),
 	})
 
 	if result.ShouldReturn() {
@@ -155,7 +162,7 @@ func (r *GuestbookReconciler) SetupWithManager(mgr ctrl.Manager) error {
 }
 ```
 
-Then you just need to register the controller with the controller-runtime manager and you are all set!
+Then you just need to register the controller with the controller-runtime manager and you're all set!
 
 ```go
 [...]
@@ -168,11 +175,69 @@ Then you just need to register the controller with the controller-runtime manage
 [...]
 ```
 
-## Status reconciliation
+## Advanced Features
 
-The status reconciliation feature works for custom resources that deploy workloads. Right now only owned Deployments and StatefulSets are supported.
+### Operation Modes
 
-To use the status reconciliation feature add this to your controller, indicating the Deployments and StatefulSets that are owned by the custom resource:
+The resource package supports two reconciliation modes:
+
+- **Update Mode** (`ModifyOpUpdate`): Performs full object replacement using `client.Update()`. This is the default mode for backward compatibility.
+- **Patch Mode** (`ModifyOpPatch`): Uses strategic merge patches via `client.Patch()` with `client.MergeFrom()`. This is more efficient and reduces conflicts.
+
+Configure operation mode per template:
+
+```go
+template := resource.NewTemplate(builder).
+    WithModifyOp(resource.ModifyOpPatch)  // Use patch mode for better performance
+```
+
+### Automatic GVK Inference
+
+Templates automatically determine their GroupVersionKind from the generic type parameter, eliminating boilerplate:
+
+```go
+// Automatically infers GVK as apps/v1 Deployment
+template := resource.NewTemplateFromObjectFunction(func() *appsv1.Deployment {
+    return &appsv1.Deployment{...}
+})
+```
+
+### Default Scheme Management
+
+Set a global default scheme to avoid passing it to every constructor:
+
+```go
+import myscheme "github.com/myorg/myoperator/pkg/scheme"
+
+func init() {
+    resource.Scheme = myscheme.Scheme  // Now used by default for all templates
+}
+```
+
+### Property-based Reconciliation
+
+Fine-grained control over which fields are reconciled using JSONPath expressions:
+
+```go
+template := resource.NewTemplate(builder).
+    // Only reconcile these specific fields
+    WithEnsureProperties([]resource.Property{
+        "metadata.labels",
+        "spec.replicas", 
+        "spec.template.spec.containers[0].image",
+    }).
+    // Ignore these fields even if they're within an ensured path
+    WithIgnoreProperties([]resource.Property{
+        "spec.clusterIP",                                               // Let Kubernetes manage
+        "metadata.annotations['deployment.kubernetes.io/revision']",    // Let deployment controller manage
+    })
+```
+
+## Status Reconciliation
+
+The status reconciliation feature works for custom resources that deploy workloads. Currently, only owned Deployments and StatefulSets are supported.
+
+To use the status reconciliation feature, add this to your controller, indicating the Deployments and StatefulSets that are owned by the custom resource:
 
 ```go
 [...]
@@ -186,17 +251,17 @@ To use the status reconciliation feature add this to your controller, indicating
 [...]
 ```
 
-The status reconciliation is modular, with 3 tiers of functionality depending on the interfaces that the custom resource implements:
+The status reconciliation is modular, with three tiers of functionality depending on the interfaces that the custom resource implements:
 
-* **Tier 1**. The custom resource has to implement the [ObjectWithAppStatus interface](reconciler/status.go#L16) and the status object has to implement the [AppStatus interface](reconciler/status.go#L26). Implementing these interfaces will make the controller  lookup the current status of the Deployment/s and/or StatefulSet/s and copy over their status/es to the custom resource's status.
+* **Tier 1**: The custom resource must implement the [ObjectWithAppStatus interface](reconciler/status.go#L16) and the status object must implement the [AppStatus interface](reconciler/status.go#L26). Implementing these interfaces will make the controller look up the current status of the Deployment(s) and/or StatefulSet(s) and copy over their statuses to the custom resource's status.
 
-* **Tier 2**. Additionally to the interfaces described in **Tier 1**, also the [AppStatusWithHealth interface](reconciler/status.go#L35) is implemented. This will make the controller calculate the health of each Deployment/StatefulSet and write it down to the custom resource status.
+* **Tier 2**: In addition to the interfaces described in **Tier 1**, the [AppStatusWithHealth interface](reconciler/status.go#L35) is also implemented. This will make the controller calculate the health of each Deployment/StatefulSet and write it to the custom resource status.
 
-* **Tier 3**. For workloads composed by more that 1 Deployment/StatefulSet, if the [AppStatusWithAggregatedHealth interface](reconciler/status.go#L46) is also implemented, the controller will calculate the overall health of the custom resources based on each individual Deployment/StatefulSet health status and then written to the status of the custom resource. The overall health is always the worse health status found across all owned Deployments/StatefulSets.
+* **Tier 3**: For workloads composed of more than one Deployment/StatefulSet, if the [AppStatusWithAggregatedHealth interface](reconciler/status.go#L46) is also implemented, the controller will calculate the overall health of the custom resource based on each individual Deployment/StatefulSet health status and then write it to the status of the custom resource. The overall health is always the worst health status found across all owned Deployments/StatefulSets.
 
-An example of a custom resource that implements **Tier 1** status reconciliation can be found in [this test](test/api/v1alpha1/test_types.go). To implement the other 2 tiers just add the required methods to the status object.
+An example of a custom resource that implements **Tier 1** status reconciliation can be found in [this test](test/api/v1alpha1/test_types.go). To implement the other two tiers, just add the required methods to the status object.
 
-There is also the option to pass custom status reconciliation code in case the custom resource has status fields that require specific logic. An example of this could be:
+There is also the option to pass custom status reconciliation code in case the custom resource has status fields that require specific logic. An example of this would be:
 
 ```go
 [...]
@@ -206,10 +271,10 @@ There is also the option to pass custom status reconciliation code in case the c
 		func() (bool, error) {
 			if condition {
 				instance.Status.MyCustomField = value
-				// return true when the field/s requires update
+				// Return true when the field requires update
 				return true, nil
 			}
-			// return false when the field/s doesn't/don't require update
+			// Return false when the field doesn't require update
 			return false, nil
 		})
 	)
