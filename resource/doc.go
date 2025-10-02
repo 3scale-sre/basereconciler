@@ -165,14 +165,17 @@
 //
 // # Scheme Management
 //
-// The package provides a convenient default scheme (resource.Scheme) that is used for GVK inference
-// when no explicit scheme is provided to template constructors. This defaults to the standard
-// Kubernetes scheme but can be overridden globally:
+// The package uses a convenient shared default scheme, managed by the runtimeconfig package, for
+// GVK inference when no explicit scheme is provided to template constructors. This defaults to the
+// standard Kubernetes scheme but can be overridden globally:
 //
-//	import myscheme "github.com/myorg/myoperator/pkg/scheme"
+//	import (
+//	    myscheme "github.com/myorg/myoperator/pkg/scheme"
+//	    "github.com/3scale-sre/basereconciler/runtimeconfig"
+//	)
 //
 //	func init() {
-//		resource.Scheme = myscheme.Scheme
+//		runtimeconfig.SetDefaultScheme(myscheme.Scheme)
 //	}
 //
 // This eliminates the need to pass scheme parameters to every template constructor while still
@@ -204,7 +207,7 @@
 //	import myscheme "github.com/myorg/myoperator/pkg/scheme"
 //
 //	func init() {
-//		resource.Scheme = myscheme.Scheme  // Now all templates use this by default
+//		runtimeconfig.SetDefaultScheme(myscheme.Scheme)  // Now all templates use this by default
 //	}
 //
 // Reconcile Resource (operation type determined by template configuration):
@@ -213,8 +216,8 @@
 //
 // # Advanced Features
 //
-// Default Scheme Management: Global default scheme (resource.Scheme) eliminates the need
-// to pass scheme parameters to every constructor while still allowing per-call overrides.
+// Default Scheme Management: Global default scheme via runtimeconfig eliminates the need to pass
+// scheme parameters to every constructor while still allowing per-call overrides.
 //
 // Automatic GVK Inference: Templates automatically determine their resource type from
 // the generic type parameter, reducing boilerplate and preventing mismatches.

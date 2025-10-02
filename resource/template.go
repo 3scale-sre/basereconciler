@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/3scale-sre/basereconciler/config"
+	"github.com/3scale-sre/basereconciler/runtimeconfig"
 	"github.com/3scale-sre/basereconciler/util"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -54,7 +55,7 @@ type TemplateInterface interface {
 	// GetGVK returns the GVK of the resource this template describes.
 	// If the template's GVK field is already set, it returns that value.
 	// Otherwise, it infers the GVK from the generic type T using the provided scheme,
-	// or the package default scheme (resource.Scheme) if no scheme is provided.
+	// or the package default scheme if no scheme is provided.
 	GetGVK(s ...*runtime.Scheme) schema.GroupVersionKind
 }
 
@@ -156,7 +157,7 @@ type Template[T client.Object] struct {
 // The template is enabled by default and automatically infers its GVK from the generic type T.
 //
 // Scheme handling:
-//   - If no scheme is provided, uses the package default (resource.Scheme)
+//   - If no scheme is provided, uses the shared default scheme managed by runtimeconfig
 //   - If a scheme is provided, uses that specific scheme for GVK inference
 //   - This allows for both convenient defaults and explicit overrides when needed
 func NewTemplate[T client.Object](tb TemplateBuilderFunction[T], scheme ...*runtime.Scheme) *Template[T] {
@@ -164,7 +165,7 @@ func NewTemplate[T client.Object](tb TemplateBuilderFunction[T], scheme ...*runt
 		TemplateBuilder: tb,
 		// default to true - resources should exist unless explicitly disabled
 		IsEnabled: true,
-		GVK:       inferGVKFromType[T](GetScheme(scheme...)),
+		GVK:       inferGVKFromType[T](runtimeconfig.SelectScheme(scheme...)),
 	}
 }
 
@@ -174,7 +175,7 @@ func NewTemplate[T client.Object](tb TemplateBuilderFunction[T], scheme ...*runt
 // from the generic type T.
 //
 // Scheme handling:
-//   - If no scheme is provided, uses the package default (resource.Scheme)
+//   - If no scheme is provided, uses the shared default scheme managed by runtimeconfig
 //   - If a scheme is provided, uses that specific scheme for GVK inference
 //   - This allows for both convenient defaults and explicit overrides when needed
 //
@@ -188,7 +189,7 @@ func NewTemplateFromObjectFunction[T client.Object](fn func() T, scheme ...*runt
 		TemplateBuilder: func(client.Object) (T, error) { return fn(), nil },
 		// default to true - resources should exist unless explicitly disabled
 		IsEnabled: true,
-		GVK:       inferGVKFromType[T](GetScheme(scheme...)),
+		GVK:       inferGVKFromType[T](runtimeconfig.SelectScheme(scheme...)),
 	}
 }
 
@@ -263,7 +264,7 @@ func (t *Template[T]) GetGVK(s ...*runtime.Scheme) schema.GroupVersionKind {
 	if t.GVK != (schema.GroupVersionKind{}) {
 		return t.GVK
 	}
-	gvk := inferGVKFromType[T](GetScheme(s...))
+	gvk := inferGVKFromType[T](runtimeconfig.SelectScheme(s...))
 	return gvk
 }
 
