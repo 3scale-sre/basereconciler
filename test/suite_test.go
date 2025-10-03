@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/3scale-sre/basereconciler/reconciler"
+	"github.com/3scale-sre/basereconciler/runtimeconfig"
 	"github.com/goombaio/namegenerator"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
@@ -61,6 +62,11 @@ func TestAPIs(t *testing.T) {
 	RunSpecs(t, "Controller Suite")
 }
 
+func init() {
+	utilruntime.Must(v1alpha1.AddToScheme(scheme.Scheme))
+	runtimeconfig.SetDefaultScheme(scheme.Scheme)
+}
+
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
@@ -80,10 +86,8 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	utilruntime.Must(v1alpha1.AddToScheme(scheme.Scheme))
-
 	mgr, err := ctrl.NewManager(cfg, ctrl.Options{
-		Scheme: scheme.Scheme,
+		Scheme: runtimeconfig.DefaultScheme(),
 		// Disable the metrics port to allow running the
 		// test suite in parallel
 		Metrics: metricsserver.Options{BindAddress: "0"},

@@ -207,10 +207,13 @@ template := resource.NewTemplateFromObjectFunction(func() *appsv1.Deployment {
 Set a global default scheme to avoid passing it to every constructor:
 
 ```go
-import myscheme "github.com/myorg/myoperator/pkg/scheme"
+import (
+    myscheme "github.com/myorg/myoperator/pkg/scheme"
+    "github.com/3scale-sre/basereconciler/runtimeconfig"
+)
 
 func init() {
-    resource.Scheme = myscheme.Scheme  // Now used by default for all templates
+    runtimeconfig.SetDefaultScheme(myscheme.Scheme)  // Now used by default for all templates
 }
 ```
 
